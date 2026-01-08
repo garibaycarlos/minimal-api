@@ -5,76 +5,67 @@ namespace MinimalAPI.RouteGroups;
 
 public static class ProductsMapGroup
 {
-    private static List<Product> products = new () {
-    new() {Id = 1, Name = "Smart Phone" },
-    new() { Id = 2, Name = "Smart TV"}
-};
+    private static List<Product> products = [
+        new() {Id = 1, Name = "Smart Phone" },
+        new() { Id = 2, Name = "Smart TV"}
+    ];
 
     public static RouteGroupBuilder ProductsAPI(this RouteGroupBuilder group)
     {
+        // GET /products
+        group.MapGet("/", () => products); // short version omitting return Results.Ok(products)
 
-        group.MapGet("/", async (HttpContext context) =>
-        {
-            await context.Response.WriteAsync(JsonSerializer.Serialize(products));
-        });
-
-        group.MapGet("/{id:int}", async (HttpContext context, int id) =>
+        // GET /products/{id}
+        group.MapGet("/{id:int}", (int id) =>
         {
             var product = products.FirstOrDefault(p => p.Id == id);
 
             if (product is null)
             {
-                context.Response.StatusCode = 404;
-
-                await context.Response.WriteAsync("Product not found");
-
-                return;
+                return Results.NotFound("Product not found");
             }
 
-            await context.Response.WriteAsync(JsonSerializer.Serialize(product));
+            return Results.Ok(product);
         });
 
-        group.MapPost("/", async (HttpContext context, Product product) =>
+        // POST /products
+        group.MapPost("/", async (Product product) =>
         {
             products.Add(product);
 
-            await context.Response.WriteAsync("Product added");
+            return Results.Ok("Product added");
         });
 
-        group.MapPut("/{id:int}", async (HttpContext context, int id, Product updatedProduct) =>
+        // PUT /products/{id}
+        group.MapPut("/{id:int}", async (int id, Product updatedProduct) =>
         {
             var product = products.FirstOrDefault(p => p.Id == id);
-            
+
             if (product is null)
             {
-                context.Response.StatusCode = 404;
-
-                await context.Response.WriteAsync("Product not found");
-                
-                return;
+                return Results.NotFound("Product not found");
             }
-            
+
             product.Name = updatedProduct.Name;
-            
-            await context.Response.WriteAsync("Product updated");
+
+            return Results.Ok("Product updated");
         });
 
-        group.MapDelete("/{id:int}", async (HttpContext context, int id) =>
+        // DELETE /products/{id}
+        group.MapDelete("/{id:int}", async (int id) =>
         {
             var product = products.FirstOrDefault(p => p.Id == id);
-            
+
             if (product is null)
             {
-                context.Response.StatusCode = 404;
-            
-                await context.Response.WriteAsync("Product not found");
-                
-                return;
+                // slight variation here to return a JSON response
+                return Results.NotFound(new { error = "Product not found" });
             }
-            
+
             products.Remove(product);
-            
-            await context.Response.WriteAsync("Product deleted");
+
+            // slight variation here to return a JSON response
+            return Results.Ok(new { message = "Product deleted" });
         });
 
         return group;
