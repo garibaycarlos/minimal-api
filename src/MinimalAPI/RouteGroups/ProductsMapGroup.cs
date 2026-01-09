@@ -1,5 +1,5 @@
-﻿using MinimalAPI.Models;
-using System.Text.Json;
+﻿using MinimalAPI.EndpointFilters;
+using MinimalAPI.Models;
 
 namespace MinimalAPI.RouteGroups;
 
@@ -34,7 +34,8 @@ public static class ProductsMapGroup
             products.Add(product);
 
             return Results.Ok("Product added");
-        });
+        })
+        .AddEndpointFilter<CustomEndpointFilter>();
 
         // PUT /products/{id}
         group.MapPut("/{id:int}", async (int id, Product updatedProduct) =>
